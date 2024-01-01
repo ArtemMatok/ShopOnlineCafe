@@ -1,0 +1,88 @@
+﻿@page "/cart"
+@inject ICartService _cartService 
+<link href="~/css/app.css" rel="stylesheet" />
+<section class="products">
+
+    <h1 class="title">your cart</h1>
+
+    <div class="cart-total">
+        <p>grand total : <span>$(@orders.Sum(x=>x.Food.Price*x.Quantity))</span></p>
+        
+            <a @onclick="AcceptOrder" class="btn-own">checkout orders</a>
+        
+    </div>
+    
+
+    <div class="box-container">
+        @foreach (var item in orders)
+        {
+            
+           
+            <div class="box">
+
+                <button class="fas fa-times" @onclick="(()=>DeleteItem(item))"></button>
+                <img src="@item.Food.Image" alt="">
+                <div class="name">@item.Food.Name</div>
+                <div class="flex">
+                    <div class="price"><span>$</span>@(item.Food.Price* item.Quantity)</div>
+                    <EditForm Model="item" >
+                        <InputNumber   min="1" max="99" name="qty" class="qty" @bind-Value="item.Quantity"></InputNumber>
+                       
+                    </EditForm>
+                    @*<input type="number" name="qty" class="qty" min="1" max="99" value="1" onkeypress="if(this.value.length == 2) return false;">*@
+                </div>
+
+            </div>
+            
+
+        }
+
+
+
+
+    </div>
+
+   
+
+</section> 
+
+@code {
+    private List<OrderProduct> orders = new List<OrderProduct>();
+
+    private decimal sum = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        orders = await _cartService.GetAll();
+        if (orders != null || orders.Count !=0)
+        {
+            sum =await  _cartService.GetSumOrders();
+        }
+    }
+
+    private async Task DeleteItem(OrderProduct product)
+    {
+        await _cartService.DeleteItem(product);
+        orders = await _cartService.GetAll();
+        sum = await _cartService.GetSumOrders();
+    }
+    private async Task AcceptOrder()
+    {
+        await _cartService.UpdateItem(orders);
+        
+    }
+
+    private decimal SumOfProduct(OrderProduct order)
+    {
+        return (order.Food.Price * order.Quantity);
+    }
+
+
+
+
+
+
+
+
+
+}

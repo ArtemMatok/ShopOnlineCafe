@@ -1,0 +1,111 @@
+﻿@page "/ordersAdmin"
+@page "/ordersAll"
+@inject NavigationManager _navManager
+@inject IOrderService _orderService
+
+<h1 class="title">All Orders</h1>
+
+<div class="mt-3">
+
+    @foreach (var item in orders)
+    {
+        if (!item.IsDone)
+        {
+            <div class="checkout mb-3">
+
+               
+                <div class="form">
+
+                    <EditForm Model="item" OnSubmit="(()=>SubmitOrder(item))">
+                        <h2 class="title">KOD: @item.Kod</h2>
+                        <DataAnnotationsValidator />
+                        <div class="cart-items">
+                            <h3>cart items</h3>
+
+                            @foreach (var item in item.Orders)
+                            {
+                                <p><span class="name">@item.NameFood : @item.Quantity</span><span class="price">$@(item.Sum)</span></p>
+
+
+                            }
+                            <p class="grand-total"><span class="name">grand total:</span><span class="price">$@(SumAll(orders))</span></p>
+
+
+
+
+
+                        </div>
+
+                        <div class="user-info">
+                            <h3>your info </h3>
+                            <div class="mb-3">
+
+                                <InputText style="font-size:2rem" readonly @bind-Value="item.Name" class="form-control" placeholder="User Name"><i class="fa fa-user"></i></InputText>
+                                <ValidationMessage For="@(()=>item.Name)"></ValidationMessage>
+                            </div>
+                            <div class="mb-3">
+
+                                <InputText style="font-size:2rem" readonly @bind-Value="item.PhoneNumber" class="form-control" placeholder="+380"><i class="fa fa-phone"></i></InputText>
+                                <ValidationMessage For="@(()=>item.PhoneNumber)"></ValidationMessage>
+                            </div>
+
+                            <h3>delivery address</h3>
+                            <div class="mb-3">
+
+                                <InputText style="font-size:2rem" readonly @bind-Value="item.Street" class="form-control" placeholder="Address"><i class="fa fa-market-alt"></i></InputText>
+                                <ValidationMessage For="@(()=>item.Street)"></ValidationMessage>
+                            </div>
+                            <input class="box" value="@item.Payment" />
+
+
+                            <button class="btn-own btn-success">Order is done</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        }
+
+    }
+
+
+
+
+
+</div>
+
+
+@code {
+    private List<Order> orders = new List<Order>();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        orders = await _orderService.GetAllOrders();
+    }
+
+    private decimal SumAll(IEnumerable<Order> orders)
+    {
+        decimal sum = 0;
+        foreach (var item in orders)
+        {
+            sum += item.Orders.Sum(x => x.Sum);
+        }
+        return sum;
+    }
+
+
+    private async Task SubmitOrder(Order order)
+    {
+        order.IsDone = true;
+        if (await _orderService.UpdateIsDone(order))
+        {
+            orders.Remove(order);
+        }
+        else
+        {
+            _navManager.NavigateTo("ordersAll");
+        }
+
+
+    }
+}

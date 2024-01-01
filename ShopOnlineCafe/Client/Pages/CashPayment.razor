@@ -1,0 +1,16 @@
+﻿@page "/cashPayment"
+@inject NavigationManager _navManager
+
+
+<h2 class="title">Your order has been completed.</h2>
+<h2 class="title">In the near future, our manager will call you!</h2>
+<div class="btn-cash">
+    <button @onclick="Back" class="btn-own">Back to home page</button>
+</div>
+
+@code {
+    private void Back()
+    {
+        _navManager.NavigateTo("");
+    }
+}

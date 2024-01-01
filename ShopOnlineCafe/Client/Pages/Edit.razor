@@ -1,0 +1,55 @@
+﻿@page "/edit"
+@inject IFoodService _foodService
+@inject NavigationManager _navManager
+
+<div class="heading">
+    <h3>Edit Page</h3>
+    <p><NavLink href=""><a>home</a></NavLink><span>/edit</span></p>
+</div>
+
+<section class="products">
+    <div class="box-container">
+        @if (products == null)
+        {
+            <img class="loader-img" src="images/loader.gif" alt="">
+        }
+        else
+        {
+            @foreach (var item in products)
+            {
+                <EditForm Model="item" class="box">
+                    <button @onclick="(()=>EditClick(item.Id))" class="edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                
+                    <img src="@item.Image" alt="">
+                    <a href="category.html" class="cat">@item.Category</a>
+                    <div class="name">@item.Name</div>
+                    <div class="flex">
+                        <div class="price"><span>$</span>@item.Price<span>/-</span></div>
+                        <input type="number" name="qty" class="qty" min="1" max="99" value="1">
+                    </div>
+                </EditForm>
+            }
+        }
+        @if (products.Count() == 0)
+        {
+            <img class="loader-img" src="images/loader.gif" alt="">
+        }
+
+    </div>
+</section>
+
+@code {
+    private IEnumerable<Food> products = new List<Food>();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        products = await _foodService.GetAllFoods();
+    }
+
+
+    private void EditClick(int id)
+    {
+        _navManager.NavigateTo($"edit/{id}");
+    }
+}

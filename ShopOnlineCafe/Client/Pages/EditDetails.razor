@@ -1,0 +1,114 @@
+@page "/edit/{id:int}"
+@inject IFoodService _foodService
+@inject NavigationManager _navManager
+    <link href="css/app.css" rel="stylesheet" />
+<h1 class="create-head">Create Dishes</h1>
+<EditForm Model="food" OnValidSubmit="HandleSubmit">
+    <DataAnnotationsValidator />
+    <div class="form-food">
+
+        <div class="group">
+            <div>
+                <InputText Placeholder="Name food" class="form-control" @bind-Value="food.Name" />
+                <ValidationMessage For="@(()=>food.Name)"></ValidationMessage>
+            </div>
+        </div>
+        <div class="group">
+            <div>
+                <InputSelect class="form-control" @bind-Value="food.Category">
+                    <option value="">-- Select Category --</option>
+                    <option>Fast Food</option>
+                    <option>Dish</option>
+                    <option>Drink</option>
+                    <option>Dessert</option>
+                </InputSelect>
+                @*<InputText Placeholder="Name category" class="form-control" @bind-Value="food.Category" />*@
+                <ValidationMessage For="@(()=>food.Category)"></ValidationMessage>
+            </div>
+        </div>
+        <div class="group">
+            <div>
+                <InputNumber Placeholder="Price" class="form-control" @bind-Value="food.Price" />
+                <ValidationMessage For="@(()=>food.Price)"></ValidationMessage>
+            </div>
+        </div>
+        <div class="group">
+            <InputFile class="form-control" OnChange="UploadImage"></InputFile>
+        </div>
+    </div>
+    <div class="btn-content">
+        <button class="btn-create btn-own btn-success">Update</button>
+    </div>
+
+</EditForm>
+<div class="btn-content">
+   
+    <Button class="btn-create btn btn-success" Color="ButtonColor.Danger" @onclick="ShowConfirmationAsync"> Delete </Button>
+</div>
+<ConfirmDialog @ref="dialog" />
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private Food food = new Food();
+    private string ImageUploadMessage = "";
+
+    protected async override Task OnInitializedAsync()
+    {
+        food = await _foodService.GetFoodById(Id);
+    }
+    private async void HandleSubmit()
+    {
+        if (await _foodService.UpdateFood(food))
+        {
+            _navManager.NavigateTo("/edit");
+        }
+        else
+        {
+            _navManager.NavigateTo($"/edit/{Id}");
+        }
+    }
+
+
+    async Task UploadImage(InputFileChangeEventArgs e)
+    {
+        if (e.File.Name.ToLower().Contains(".png"))
+        {
+            var format = "image/png";
+            var resizeImage = await e.File.RequestImageFileAsync(format, 300, 300);
+            var buffer = new byte[resizeImage.Size];
+            await resizeImage.OpenReadStream().ReadAsync(buffer);
+            var imageData = $"data:{format};base64,{Convert.ToBase64String(buffer)}";
+            ImageUploadMessage = "";
+            food.Image = imageData;
+            imageData = "";
+            return;
+        }
+        ImageUploadMessage = "PNG file needed.";
+        return;
+    }
+
+
+    #region Delete
+    private ConfirmDialog dialog = default!;
+  
+    private async Task ShowConfirmationAsync()
+    {
+        var confirmation = await dialog.ShowAsync(
+            title: "Are you sure you want to delete this?",
+            message1: "This will delete the record.",
+            message2: "Do you want to proceed?");
+
+        if (confirmation)
+        {
+            await _foodService.DeleteFood(food);
+            _navManager.NavigateTo("/edit");
+        }
+        else
+        {
+           
+        }
+    }
+    #endregion
+
+}

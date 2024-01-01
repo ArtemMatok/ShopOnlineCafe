@@ -1,0 +1,113 @@
+﻿@page "/unauthorize"
+
+@inject IFoodService _foodService
+@inject ILocalStorageService _localStorageService
+@inject IToastService _toastService
+@inject ICartService _cartService
+
+<link href="css/app.css" rel="stylesheet" />
+<div class="heading">
+    <h3>our menu</h3>
+    <p><NavLink href=""><a>home</a></NavLink><span>/menu</span></p>
+</div>
+
+
+@*menu seciton*@
+
+<section class="products">
+
+    <div class="box-container">
+        @if (products == null)
+        {
+            <img class="loader-img" src="images/loader.gif" alt="">
+        }
+        else
+        {
+
+            <Toasts Style="font-size:large;" AutoHide="true" Delay="3000" class="p-3" Messages="messages" Placement="ToastsPlacement.TopCenter" />
+            <Modal UseStaticBackdrop="true" CloseOnEscape="false" @ref="modal" />
+
+            @foreach (var item in products)
+            {
+                <EditForm Model="item" class="box">
+                    <button @onclick="(()=>ShowComponent(item.Id))" class="fas fa-eye"></button>
+                    <img src="@item.Image" alt="">
+                    <a href="category.html" class="cat">@item.Category</a>
+                    <div class="name">@item.Name</div>
+                    <div class="flex">
+                        <div class="price"><span>$</span>@item.Price<span>/-</span></div>
+                        <input type="number" name="qty" class="qty" min="1" max="99" value="1">
+                    </div>
+                </EditForm>
+            }
+
+        }
+        @if (products.Count() == 0)
+        {
+            <img class="loader-img" src="images/loader.gif" alt="">
+        }
+
+    </div>
+
+</section>
+
+
+
+
+
+
+@code
+{
+    private IEnumerable<Food> products = new List<Food>();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        products = await _foodService.GetAllFoods();
+    }
+
+
+    #region Modal
+    private Modal modal = default!;
+    private string? message;
+    private async Task ShowComponent(int id)
+    {
+        var parameters = new Dictionary<string, object>();
+        parameters.Add("FoodId", id);
+        await modal.ShowAsync<ModalProduct>(title: "Food Details", parameters: parameters);
+    }
+
+    #endregion
+
+
+    #region Cart
+    List<ToastMessage> messages = new List<ToastMessage>();
+
+    private void ShowMessage(ToastType toastType, Food food) => messages.Add(CreateToastMessage(toastType, food));
+
+    private ToastMessage CreateToastMessage(ToastType toastType, Food food)
+    => new ToastMessage
+    {
+        Type = toastType,
+        Title = "Added to cart",
+        Message = $"{food.Name} was success add"
+
+
+    };
+    private async Task AddToCart(Food food)
+    {
+
+        await _cartService.AddToCart(ChangeFoodToOrder(food));
+
+        ShowMessage(ToastType.Success, food);
+    }
+
+
+    private OrderProduct ChangeFoodToOrder(Food food)
+    {
+        OrderProduct orderProduct = new OrderProduct();
+        orderProduct.Food = food;
+        return orderProduct;
+    }
+    #endregion
+}

@@ -1,0 +1,85 @@
+﻿@page "/login"
+@using ShopOnlineCafe.Client.Authentication
+@using System.Net
+@layout LoginLayout
+@inject ShopOnlineCafe.Client.Services.UserService.IUserService _userService
+@inject HttpClient _httpClient
+@inject NavigationManager _navManager
+@inject AuthenticationStateProvider authStateProvider
+
+    <link href="css/app.css" rel="stylesheet" />
+    @if (isLoader)
+    {
+        <img class="loader-img" src="images/loader.gif" alt="">
+
+    }
+
+    <div class="row">
+        <div class="@loader">
+
+            <div class="mt-4 col-lg-4 offset-lg-4 pt-4 pb-4 border">
+                <div class="mb-3 text-center">
+                    <h3>LOGIN</h3>
+                </div>
+                <div class="mb-3">
+
+                    <input @bind="loginRequest.Email" class="form-control" placeholder="User Name" />
+                </div>
+                <div class="mb-3">
+
+                    <input @bind="loginRequest.Password" type="password" class="form-control" placeholder="Password" />
+                </div>
+                <div class="mb-3 d-grid gap-2">
+                    <button @onclick="Authenticate" class="btn-own">Login</button>
+                </div>
+                @if (isSuccess)
+                {
+
+                }
+                else
+                {
+                    <h2 style="color:red;">Incorect login or password</h2>
+                }
+            </div>
+        </div>
+    </div>
+
+    @code {
+        private LoginRequest loginRequest = new LoginRequest();
+        private bool isSuccess = true;
+
+
+
+        private async Task Authenticate()
+        {
+            isLoader = true;
+            var loginResponse = await _httpClient.PostAsJsonAsync<LoginRequest>("/api/Account/Login", loginRequest);
+            isLoader = true;
+            if (loginResponse.IsSuccessStatusCode)
+            {
+                var userSession = await loginResponse.Content.ReadFromJsonAsync<UserSession>();
+                var customAuthStateProvider = (CustomAuthenticationStateProcider)authStateProvider;
+                await customAuthStateProvider.UpdateAuthenticationState(userSession);
+                _navManager.NavigateTo("/", true);
+                isSuccess = true;
+
+            }
+            else if (loginResponse.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                isSuccess = false;
+                isLoader = false;
+
+                return;
+            }
+        }
+
+        #region loader
+
+        private bool isLoader = false;
+        private string loader => isLoader ? "loader-auth" : "";
+
+        #endregion
+
+    }
+
+

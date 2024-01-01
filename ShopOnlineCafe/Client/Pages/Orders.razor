@@ -1,0 +1,96 @@
+﻿@page "/order"
+@inject IOrderService _orderSerivce
+
+<h1 class="title">Follow your order</h1>
+
+<div class="order-number">
+
+    <input type="number" @bind="number" class="number-order" placeholder="Order`s number" />
+
+</div>
+<div class="btn-order">
+    <button @onclick="(()=>SubmitHandler(number))" class="btn-own">OK</button>
+</div>
+<div class="mt-3">
+    @if (order != null)
+    {
+
+
+        @if (!order.IsDone)
+        {
+            <div class="checkout">
+
+
+                <div class="form">
+
+                    <EditForm Model="order">
+                        <DataAnnotationsValidator />
+                        <div class="cart-items">
+                            <h3>cart items</h3>
+
+                            @foreach (var item in order.Orders)
+                            {
+                                <p><span class="name">@item.NameFood : @item.Quantity</span><span class="price">$@(item.Sum)</span></p>
+
+
+                            }
+                            <p class="grand-total"><span class="name">grand total:</span><span class="price">$@sum</span></p>
+
+
+
+
+
+                        </div>
+
+                        <div class="user-info">
+                            <h3>your info </h3>
+                            <div class="mb-3">
+
+                                <InputText style="font-size:2rem" readonly @bind-Value="order.Name" class="form-control" placeholder="User Name"><i class="fa fa-user"></i></InputText>
+                                <ValidationMessage For="@(()=>order.Name)"></ValidationMessage>
+                            </div>
+                            <div class="mb-3">
+
+                                <InputText style="font-size:2rem" readonly @bind-Value="order.PhoneNumber" class="form-control" placeholder="+380"><i class="fa fa-phone"></i></InputText>
+                                <ValidationMessage For="@(()=>order.PhoneNumber)"></ValidationMessage>
+                            </div>
+
+                            <h3>delivery address</h3>
+                            <div class="mb-3">
+
+                                <InputText style="font-size:2rem" readonly @bind-Value="order.Street" class="form-control" placeholder="Address"><i class="fa fa-market-alt"></i></InputText>
+                                <ValidationMessage For="@(()=>order.Street)"></ValidationMessage>
+                            </div>
+                            <input class="box" value="@order.Payment" />
+
+
+
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        }
+        else
+        {
+            <h2 class="title">Your order was delivered</h2>
+        }
+
+
+
+    }
+
+</div>
+
+@code {
+    private string number;
+    private Order order = null;
+    private decimal sum => order.Orders.Sum(x => x.Sum);
+
+    private async void SubmitHandler(string number)
+    {
+        var orderClient = await _orderSerivce.GetOrderByKod(number);
+        order = orderClient;
+        StateHasChanged();
+    }
+
+}

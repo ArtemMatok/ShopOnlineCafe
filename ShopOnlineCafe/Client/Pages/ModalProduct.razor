@@ -1,0 +1,28 @@
+﻿@inject IFoodService _foodService
+<div class="row">
+    <div class="col-5 col-md-3 text-end">Image :</div>
+    <img src="@food.Image" alt="Alternate Text" />
+</div>
+<div class="row">
+    <div class="col-5 col-md-3 text-end">Name :</div>
+    <div class="col-7 col-md-9">@food.Name</div>
+</div>
+<div class="row">
+    <div class="col-5 col-md-3 text-end">Price :</div>
+    <div class="col-7 col-md-9">@food.Price</div>
+</div>
+<div class="row">
+    <div class="col-5 col-md-3 text-end">Description :</div>
+    <div class="col-7 col-md-9">@food.Description</div>
+</div>
+
+@code {
+    private Food food;
+
+    [Parameter] public int FoodId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        food = await _foodService.GetFoodById(FoodId);
+    }
+}

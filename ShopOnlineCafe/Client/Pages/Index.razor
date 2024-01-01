@@ -1,0 +1,101 @@
+﻿@page "/"
+    <link href="css/app.css" rel="stylesheet" />
+
+
+    <section class="hero">
+        <div class="swiper hero-slider">
+            <div class="swiper-wrapper">
+                <div class="slide">
+
+                    <div class="content">
+                        <span>order online</span>
+                        <h3>@nameFood</h3>
+                        
+                        
+                    </div>
+                    <div class="image">
+                        <img src="@imgFood" alt="" style="width: 70%">
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    @* category section *@
+    <h1 class="title">food category</h1>
+    <section class="category ">
+
+
+        <div class="box-container">
+            <a href="#" class="box">
+                <img src="images/cat-1.png" alt="">
+                <h3>fast food</h3>
+            </a>
+
+
+
+            <a href="#" class="box">
+                <img src="images/cat-2.png" alt="">
+                <h3>main dishes</h3>
+            </a>
+
+
+            <a href="#" class="box">
+                <img src="images/cat-3.png" alt="">
+                <h3>drinks food</h3>
+            </a>
+
+
+
+            <a href="#" class="box">
+                <img src="images/cat-4.png" alt="">
+                <h3>dessert</h3>
+            </a>
+        </div>
+    </section>
+
+
+
+
+
+
+
+    @code
+{
+        #region mainPhoto
+        private Random rnd = new Random();
+
+        private int numPhoto;
+        private string nameFood;
+        private string imgFood;
+        #endregion
+
+        protected override void OnInitialized()
+        {
+            #region mainPhoto
+
+            numPhoto = rnd.Next(1, 4);
+            nameFood = string.Empty;
+            imgFood = string.Empty;
+            if (numPhoto == 1)
+            {
+                nameFood = "delicious pizza";
+                imgFood = "images/home-img-1.png";
+            }
+            else if (numPhoto == 2)
+            {
+                nameFood = "cheezzy hamburger";
+                imgFood = "images/home-img-2.png";
+            }
+            else
+            {
+                nameFood = "delicious chiken";
+                imgFood = "images/home-img-3.png";
+            }
+
+            #endregion
+
+        }
+    }

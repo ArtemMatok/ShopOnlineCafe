@@ -1,0 +1,185 @@
+﻿@page "/checkout"
+@inject ICartService _cartService
+@inject IOrderService _orderService
+@inject NavigationManager _navManager 
+
+<link href="css/app.css" rel="stylesheet" />
+<div class="heading">
+    <h3>checkout</h3>
+    <p><NavLink href=""><a>home</a></NavLink><span>/checkout</span></p>
+</div>
+
+
+
+
+<div class="checkout">
+   
+    <h2 class="title">Your number: @number</h2>
+    <h4 style="display:flex;justify-content:center">Remember this number, after ordering you can track it</h4>
+    <div class="form">
+        
+
+        <ConfirmDialog @ref="dialog" />
+        <EditForm Model="order" OnValidSubmit="ShowConfirmationAsync">
+            <DataAnnotationsValidator />
+            <div class="cart-items">
+                <h3>cart items</h3>
+                @if (orders.Count == 0)
+                {
+                    <h2 style="color:white">There are nothing</h2>
+                }
+                else
+                {
+                    @foreach (var item in orders)
+                    {
+                        <p><span class="name">@item.Food.Name : @item.Quantity</span><span class="price">$@(item.Food.Price*item.Quantity)</span></p>
+
+
+                    }
+                    <p class="grand-total"><span class="name">grand total:</span><span class="price">$@sum</span></p>
+                    <NavLink href="cart">
+                        <a class="btn-own">Cart</a>
+                    </NavLink>
+                }
+
+
+
+            </div>
+
+            <div class="user-info">
+                <h3>your info </h3>
+                <div class="mb-3">
+
+                    <InputText @bind-Value="order.Name" class="form-control" placeholder="User Name"><i class="fa fa-user"></i></InputText>
+                    <ValidationMessage For="@(()=>order.Name)"></ValidationMessage>
+                </div>
+                <div class="mb-3">
+
+                    <InputText @bind-Value="order.PhoneNumber" class="form-control" placeholder="+380"><i class="fa fa-phone"></i></InputText>
+                    <ValidationMessage For="@(()=>order.PhoneNumber)"></ValidationMessage>
+                </div>
+
+                <h3>delivery address</h3>
+                <div class="mb-3">
+
+                    <InputText @bind-Value="order.Street" class="form-control" placeholder="Address"><i class="fa fa-market-alt"></i></InputText>
+                    <ValidationMessage For="@(()=>order.Street)"></ValidationMessage>
+                </div>
+                <InputSelect class="box" @bind-Value="order.Payment">
+                    <option value="">-- Select Payment --</option>
+                    <option>cash on deliery</option>
+                    <option>card</option>
+
+                </InputSelect>
+
+                <button  style="width: 100%; background: var(--red); color: var(--white)" class="btn-own">place order</button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private Order order = new();
+    private List<OrderProduct> orders = new();
+    private decimal sum=>orders.Sum(x=>(x.Food.Price*x.Quantity));
+    private ConfirmDialog dialog = default!;
+    private string number;
+
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        orders = await _cartService.GetAll();
+       
+
+        order.Orders = Change(orders);
+
+        number = Convert.ToString(await _orderService.GetOrderCount()+1);
+
+        Console.WriteLine(number);
+    }
+
+    private List<OrderList> Change(List<OrderProduct> orders)
+    {
+        List<OrderList> orderLists = new List<OrderList>();
+        foreach (var item in orders)
+        {
+            OrderList orderListItem = new OrderList
+            {
+                NameFood = item.Food.Name,
+                Price = item.Food.Price,
+                Quantity = item.Quantity
+            };
+
+            // Добавляем заполненный объект OrderList в список
+            orderLists.Add(orderListItem);
+        }
+        return orderLists;
+    }
+
+
+
+
+    private async Task ShowConfirmationAsync()
+    {
+        var confirmation = await dialog.ShowAsync(
+            title: "Are you sure you want to order this?",
+
+            message1: "Do you want to proceed?");
+
+        if (confirmation)
+        {
+            order.Kod = number;
+            var result = await _orderService.CreateOrder(order);
+            if(result)
+            {
+                if(order.Payment == "cash on deliery")
+                {
+                    _navManager.NavigateTo("cashPayment");
+                    await _cartService.ClearAll();
+
+                }
+                else
+                {
+                    string checkoutUrl = await _cartService.Checkout();
+
+                    _navManager.NavigateTo(checkoutUrl);
+                    await _cartService.ClearAll();
+                }
+
+
+
+
+
+
+            }
+        }
+        else
+        {
+            _navManager.NavigateTo("/checkout");
+        }
+    }
+
+
+    private string GenerateRandomNumbersAsString()
+    {
+        Random random = new Random();
+        int[] numbers = new int[3];
+
+
+        for (int i = 0; i < 3; i++)
+        {
+            numbers[i] = random.Next(1,10);
+        }
+
+
+        string result = string.Join("", numbers);
+
+        return result;
+    }
+
+
+
+
+}

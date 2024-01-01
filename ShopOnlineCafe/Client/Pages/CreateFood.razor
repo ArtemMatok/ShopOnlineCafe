@@ -1,0 +1,80 @@
+﻿@page "/createFood"
+@inject IFoodService _foodService
+@inject NavigationManager _navManager
+
+<h1  class="create-head">Create Dishes</h1>
+<EditForm Model="food" OnValidSubmit="HandleSubmit">
+    <DataAnnotationsValidator />
+    <div class="form-food">
+
+
+        <div class="group">
+            <div>
+                <InputText Placeholder="Name food" class="form-control" @bind-Value="food.Name" />
+                <ValidationMessage For="@(()=>food.Name)"></ValidationMessage>
+            </div>
+        </div>
+        <div class="group">
+            <div>
+                <InputSelect class="form-control" @bind-Value="food.Category">
+                    <option value="">-- Select Category --</option>
+                    <option>Fast Food</option>
+                    <option>Dish</option>
+                    <option>Drink</option>
+                    <option>Dessert</option>
+                </InputSelect>
+                @*<InputText Placeholder="Name category" class="form-control" @bind-Value="food.Category" />*@
+                <ValidationMessage For="@(()=>food.Category)"></ValidationMessage>
+            </div>
+        </div>
+        <div class="group">
+            <div>
+                <InputNumber Placeholder="Price" class="form-control" @bind-Value="food.Price" />
+                <ValidationMessage For="@(()=>food.Price)"></ValidationMessage>
+            </div>
+        </div>
+        <div class="group">
+            <InputFile class="form-control" OnChange="UploadImage"></InputFile>
+        </div>
+    </div>
+    <div class="btn-content">
+        <button class="btn-create btn btn-success">Create</button>
+    </div>
+</EditForm>
+
+@code {
+    private Food food = new();
+    private string ImageUploadMessage = "";
+
+    private async void HandleSubmit()
+    {
+        if(await _foodService.CreateFood(food))
+        {
+            _navManager.NavigateTo("/");
+        }
+        else
+        {
+            _navManager.NavigateTo("/createProduct");
+        }
+    }
+
+
+    async Task UploadImage(InputFileChangeEventArgs e)
+    {
+        if (e.File.Name.ToLower().Contains(".png"))
+        {
+            var format = "image/png";
+            var resizeImage = await e.File.RequestImageFileAsync(format, 300, 300);
+            var buffer = new byte[resizeImage.Size];
+            await resizeImage.OpenReadStream().ReadAsync(buffer);
+            var imageData = $"data:{format};base64,{Convert.ToBase64String(buffer)}";
+            ImageUploadMessage = "";
+            food.Image = imageData;
+            imageData = "";
+            return;
+        }
+        ImageUploadMessage = "PNG file needed.";
+        return;
+    }
+
+}

@@ -1,0 +1,73 @@
+﻿@page "/register"
+@using ShopOnlineCafe.Client.Services.UserService
+@inject IUserService _userService
+
+@layout LoginLayout
+    <link href="css/app.css" rel="stylesheet" />
+    @if (isLoader)
+    {
+        <img class="loader-img" src="images/loader.gif" alt="">
+
+    }
+    <div class="row">
+        <div class="@loader">
+            <div class="mt-4 col-lg-4 offset-lg-4 pt-4 pb-4 border">
+                <div class="mb-3 text-center">
+                    <h3>REGISTER</h3>
+                </div>
+                <EditForm Model="registerRequest" OnValidSubmit="RegisterHandler">
+                    <DataAnnotationsValidator />
+                    <div class="mb-3">
+
+                        <InputText @bind-Value="registerRequest.Email" class="form-control" placeholder="User Name" />
+                        <ValidationMessage For="@(()=>registerRequest.Email)"></ValidationMessage>
+                    </div>
+                    <div class="mb-3">
+
+                        <InputText @bind-Value="registerRequest.Password" type="password" class="form-control" placeholder="Password" />
+                        <ValidationMessage For="@(()=>registerRequest.Password)"></ValidationMessage>
+                    </div>
+                    <div class="mb-3">
+
+                        <InputText @bind-Value="registerRequest.ConfirmPassword" type="password" class="form-control" placeholder="Confirm Password" />
+                        <ValidationMessage For="@(()=>registerRequest.ConfirmPassword)"></ValidationMessage>
+                    </div>
+                    <div class="mb-3 d-grid gap-2">
+                        <button class="btn-own">Register</button>
+                    </div>
+                </EditForm>
+                @if (!isSuccess)
+                {
+                    <h2 style="color:red">Email is used</h2>
+                }
+            </div>
+        </div>
+    </div>
+
+
+
+    @code {
+        private RegisterRequest registerRequest = new();
+        private bool isSuccess = true;
+
+
+        private async Task RegisterHandler()
+        {
+            isLoader = true;
+            var res = await _userService.Register(registerRequest);
+            if (res)
+            {
+                isSuccess = true;
+            }
+            else
+            {
+                isSuccess = false;
+                isLoader = false;
+            }
+        }
+
+        #region loader
+        private bool isLoader = false;
+        private string loader => isLoader ? "loader-auth" : "";
+        #endregion
+    }
